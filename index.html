@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Physics of Espresso</title>
+  <script>
+    MathJax = {
+      tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --espresso: #2C1810;
+      --crema: #D4A96A;
+      --crema-light: #E8D4B0;
+      --foam: #FAF3EB;
+      --roast: #5C3D2E;
+      --steam: #8B7355;
+      --water: #4A6B7A;
+      --ceramic: #F5EDE3;
+      --ink: #1A0F0A;
+      --shadow: rgba(44, 24, 16, 0.12);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 18px;
+    }
+
+    body {
+      font-family: 'Source Serif 4', Georgia, serif;
+      background: var(--foam);
+      color: var(--espresso);
+      line-height: 1.75;
+      overflow-x: hidden;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 4rem 2rem;
+      background:
+        radial-gradient(ellipse at 30% 20%, rgba(212,169,106,0.25) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 80%, rgba(92,61,46,0.15) 0%, transparent 50%),
+        var(--espresso);
+      color: var(--foam);
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23D4A96A' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 700px;
+    }
+
+    .hero-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--crema);
+      margin-bottom: 2rem;
+      opacity: 0;
+      animation: fadeUp 0.8s ease forwards 0.2s;
+    }
+
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.6rem, 6vw, 4.5rem);
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp 0.8s ease forwards 0.4s;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      color: var(--crema);
+    }
+
+    .hero-author {
+      font-size: 1.05rem;
+      color: var(--crema-light);
+      margin-bottom: 0.4rem;
+      opacity: 0;
+      animation: fadeUp 0.8s ease forwards 0.6s;
+    }
+
+    .hero-date {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--steam);
+      letter-spacing: 0.1em;
+      opacity: 0;
+      animation: fadeUp 0.8s ease forwards 0.7s;
+    }
+
+    .hero-scroll {
+      margin-top: 3.5rem;
+      opacity: 0;
+      animation: fadeUp 0.8s ease forwards 0.9s;
+    }
+
+    .hero-scroll a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--crema);
+      text-decoration: none;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      transition: color 0.3s;
+    }
+
+    .hero-scroll a:hover { color: var(--foam); }
+
+    .hero-scroll svg {
+      animation: bob 2s ease-in-out infinite;
+    }
+
+    @keyframes bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(5px); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Navigation (sticky TOC) ── */
+    .toc-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(250, 243, 235, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(212, 169, 106, 0.25);
+      padding: 0.6rem 2rem;
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: none;
+    }
+
+    .toc-bar::-webkit-scrollbar { display: none; }
+
+    .toc-bar nav {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .toc-bar a {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.58rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--steam);
+      text-decoration: none;
+      padding: 0.25rem 0;
+      border-bottom: 1.5px solid transparent;
+      transition: all 0.3s;
+      flex-shrink: 0;
+    }
+
+    .toc-bar a:hover,
+    .toc-bar a.active {
+      color: var(--espresso);
+      border-bottom-color: var(--crema);
+    }
+
+    /* ── Main Content ── */
+    .content {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 4rem 2rem 6rem;
+    }
+
+    /* ── Abstract ── */
+    .abstract {
+      background: var(--ceramic);
+      border-left: 3px solid var(--crema);
+      padding: 1.8rem 2rem;
+      margin-bottom: 4rem;
+      border-radius: 0 6px 6px 0;
+      opacity: 0;
+      transform: translateY(16px);
+      transition: all 0.6s ease;
+    }
+
+    .abstract.visible { opacity: 1; transform: translateY(0); }
+
+    .abstract-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--crema);
+      margin-bottom: 0.75rem;
+    }
+
+    .abstract p {
+      font-size: 0.92rem;
+      color: var(--roast);
+      line-height: 1.8;
+    }
+
+    /* ── Sections ── */
+    .section {
+      margin-bottom: 3.5rem;
+      opacity: 0;
+      transform: translateY(16px);
+      transition: all 0.6s ease;
+    }
+
+    .section.visible { opacity: 1; transform: translateY(0); }
+
+    .section-number {
+      font-family: 'Playfair Display', serif;
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--crema-light);
+      line-height: 1;
+      margin-bottom: 0.25rem;
+    }
+
+    .section h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--espresso);
+      margin-bottom: 1.25rem;
+      line-height: 1.3;
+    }
+
+    .section p {
+      margin-bottom: 1rem;
+      color: var(--ink);
+    }
+
+    /* ── Equations ── */
+    .equation-block {
+      background: white;
+      border: 1px solid rgba(212,169,106,0.2);
+      border-radius: 6px;
+      padding: 1.4rem 1.6rem;
+      margin: 1.5rem 0;
+      overflow-x: auto;
+      box-shadow: 0 2px 8px var(--shadow);
+    }
+
+    .equation-block mjx-container {
+      font-size: 105% !important;
+    }
+
+    /* ── Variable list ── */
+    .var-list {
+      margin: 1rem 0 1rem 0.5rem;
+      font-size: 0.92rem;
+    }
+
+    .var-list .var-item {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 0.35rem;
+      align-items: baseline;
+    }
+
+    .var-item .sym {
+      font-style: italic;
+      min-width: 2.2rem;
+      text-align: right;
+      flex-shrink: 0;
+      color: var(--roast);
+    }
+
+    .var-item .desc {
+      color: var(--ink);
+    }
+
+    /* ── Example box ── */
+    .example-box {
+      background: linear-gradient(135deg, rgba(212,169,106,0.08), rgba(212,169,106,0.15));
+      border: 1px solid rgba(212,169,106,0.3);
+      border-radius: 6px;
+      padding: 1.3rem 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .example-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.58rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--crema);
+      margin-bottom: 0.6rem;
+    }
+
+    /* ── Divider ── */
+    .section-divider {
+      border: none;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--crema-light), transparent);
+      margin: 3rem 0;
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 3rem 2rem;
+      background: var(--espresso);
+      color: var(--steam);
+      font-size: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.05em;
+    }
+
+    footer a {
+      color: var(--crema);
+      text-decoration: none;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      html { font-size: 16px; }
+      .content { padding: 2.5rem 1.25rem 4rem; }
+      .abstract { padding: 1.3rem 1.4rem; }
+      .equation-block { padding: 1rem; }
+      .section-number { font-size: 2.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════ HERO ════════ -->
+<header class="hero" id="top">
+  <div class="hero-content">
+    <div class="hero-label">A Technical Overview</div>
+    <h1>The Physics of <em>Espresso</em></h1>
+
+    <div class="hero-scroll">
+      <a href="#abstract">
+        Begin reading
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M4 9l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- ════════ STICKY NAV ════════ -->
+<div class="toc-bar">
+  <nav>
+    <a href="#abstract">Abstract</a>
+    <a href="#sec-1">Introduction</a>
+    <a href="#sec-2">Brew Ratio</a>
+    <a href="#sec-3">Grind Size</a>
+    <a href="#sec-4">Darcy's Law</a>
+    <a href="#sec-5">Permeability</a>
+    <a href="#sec-6">Pressure</a>
+    <a href="#sec-7">Reynolds</a>
+    <a href="#sec-8">Temperature</a>
+    <a href="#sec-9">Diffusion</a>
+    <a href="#sec-10">Heat Transfer</a>
+    <a href="#sec-11">Crema</a>
+    <a href="#sec-12">Channeling</a>
+    <a href="#sec-13">Conclusion</a>
+  </nav>
+</div>
+
+<!-- ════════ CONTENT ════════ -->
+<main class="content">
+
+  <!-- Abstract -->
+  <div class="abstract" id="abstract">
+    <div class="abstract-label">Abstract</div>
+    <p>Espresso preparation is a complex physical process involving fluid mechanics, heat transfer, porous media flow, diffusion, chemical extraction, and colloidal foam formation. This paper summarizes the major physical principles that govern espresso extraction, including pressure-driven flow through a packed coffee bed, particle-size effects, extraction yield, temperature dependence, and crema formation.</p>
+  </div>
+
+  <!-- §1 Introduction -->
+  <section class="section" id="sec-1">
+    <div class="section-number">01</div>
+    <h2>Introduction</h2>
+    <p>Espresso is produced by forcing hot water through a compacted bed of finely ground coffee. Although it appears simple, the process depends on several coupled physical systems: the grinder, the coffee puck, the espresso machine, and the extraction chemistry.</p>
+    <p>A typical espresso shot uses water near \( T \approx 90\text{–}96\,^\circ\text{C} \) and pressure near \( P \approx 9 \;\text{bar} \). The final drink depends on grind size, dose, puck geometry, water composition, pressure, temperature, and extraction time.</p>
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- §2 Brew Ratio and Extraction Yield -->
+  <section class="section" id="sec-2">
+    <div class="section-number">02</div>
+    <h2>Brew Ratio &amp; Extraction Yield</h2>
+    <p>The brew ratio compares the mass of liquid espresso produced to the dry coffee dose:</p>
+    <div class="equation-block">
+      \[ R = \frac{m_{\text{beverage}}}{m_{\text{coffee}}} \]
+    </div>
+    <p>The extraction yield is the fraction of dry coffee dissolved into the beverage:</p>
+    <div class="equation-block">
+      \[ EY = \frac{m_{\text{dissolved solids}}}{m_{\text{coffee}}} \]
+    </div>
+    <p>If the beverage has total dissolved solids \( TDS \), then \( m_{\text{dissolved solids}} = TDS \cdot m_{\text{beverage}} \), so:</p>
+    <div class="equation-block">
+      \[ EY = \frac{TDS \cdot m_{\text{beverage}}}{m_{\text{coffee}}} \]
+    </div>
+    <div class="example-box">
+      <div class="example-label">Worked Example</div>
+      <p>If \( m_{\text{coffee}} = 18\,\text{g} \), \( m_{\text{beverage}} = 36\,\text{g} \), and \( TDS = 0.10 \), then:</p>
+      <div class="equation-block">
+        \[ EY = \frac{0.10 \times 36}{18} = 0.20 = 20\% \]
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- §3 Grind Size -->
+  <section class="section" id="sec-3">
+    <div class="section-number">03</div>
+    <h2>Grind Size &amp; Surface Area</h2>
+    <p>Grinding increases the surface area of coffee particles, allowing soluble compounds to dissolve more quickly. Smaller particles generally increase extraction rate, but they also increase resistance to flow.</p>
+    <p>For a simplified spherical coffee particle with radius \( r \):</p>
+    <div class="equation-block">
+      \[ A = 4\pi r^2, \qquad V = \tfrac{4}{3}\pi r^3 \]
+    </div>
+    <p>The surface-area-to-volume ratio is:</p>
+    <div class="equation-block">
+      \[ \frac{A}{V} = \frac{3}{r} \]
+    </div>
+    <p>Therefore, as particle radius decreases, the available surface area per unit volume increases.</p>
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- §4 Darcy's Law -->
+  <section class="section" id="sec-4">
+    <div class="section-number">04</div>
+    <h2>Flow Through the Coffee Puck</h2>
+    <p>The espresso puck can be modeled as a porous medium. Water flow through the puck is often approximated using Darcy's law:</p>
+    <div class="equation-block">
+      \[ Q = \frac{k\,A}{\mu\,L}\,\Delta P \]
+    </div>
+    <div class="var-list">
+      <div class="var-item"><span class="sym">\(Q\)</span> <span class="desc">— volumetric flow rate</span></div>
+      <div class="var-item"><span class="sym">\(k\)</span> <span class="desc">— permeability of the coffee bed</span></div>
+      <div class="var-item"><span class="sym">\(A\)</span> <span class="desc">— puck cross-sectional area</span></div>
+      <div class="var-item"><span class="sym">\(\mu\)</span> <span class="desc">— dynamic viscosity of water</span></div>
+      <div class="var-item"><span class="sym">\(L\)</span> <span class="desc">— puck thickness</span></div>
+      <div class="var-item"><span class="sym">\(\Delta P\)</span> <span class="desc">— pressure difference across the puck</span></div>
+    </div>
+    <p>This equation shows that flow increases with pressure and permeability, but decreases when the puck is thicker or the water is more viscous.</p>
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- §5 Permeability -->
+  <section class="section" id="sec-5">
+    <div class="section-number">05</div>
+    <h2>Puck Permeability</h2>
+    <p>The permeability \( k \) depends on particle size, packing density, and porosity. A common approximation is the Kozeny–Carman relation:</p>
+    <div class="equation-block">
+      \[ k = \frac{\epsilon^3 \, d_p^2}{180\,(1-\epsilon)^2} \]
+    </div>
+    <div class="var-list">
+      <div class="var-item"><span class="sym">\(\epsilon\)</span> <span class="desc">— porosity of the coffee bed</span></div>
+      <div class="var-item"><span class="sym">\(d_p\)</span> <span class="desc">— average particle diameter</span></div>
+    </div>
+    <p>This shows that permeability scales approximately with particle diameter squared, \( k \propto d_p^2 \). Therefore, a finer grind greatly reduces permeability and slows flow.</p>
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- §6 Pressure -->
+  <section class="section" id="sec-6">
+    <div class="section-number">06</div>
+    <h2>Pressure &amp; Flow Rate</h2>
+    <p>A standard espresso machine operates near \( \Delta P \approx 9\;\text{bar} \), where \( 1\;\text{bar} = 10^5\;\text{Pa} \), so \( 9\;\text{bar} = 9 \times 10^5\;\text{Pa} \).</p>
+    <p>If the pressure is too low, water may pass through the puck slowly and under-extract the coffee. If the puck has cracks or uneven density, water may form channels, leading to uneven extraction.</p>
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- §7 Reynolds Number -->
+  <section class="section" id="sec-7">
+    <div class="section-number">07</div>
+    <h2>Reynolds Number</h2>
+    <p>The Reynolds number estimates whether flow is laminar or turbulent:</p>
+    <div class="equation-block">
+      \[ Re = \frac{\rho\,v\,D}{\mu} \]
+    </div>
+    <div class="var-list">
+      <div class="var-item"><span class="sym">\(\rho\)</span> <span class="desc">— water density</span></div>
+      <div class="var-item"><span class="sym">\(v\)</span> <span class="desc">— flow velocity</span></div>
+      <div class="var-item"><span class="sym">\(D\)</span> <span class="desc">— characteristic length scale</span></div>
+      <div class="var-item"><span class="sym">\(\mu\)</span> <span class="desc">— dynamic viscosity</span></div>
+    </div>
+    <p>Inside the tiny pores of the coffee puck, the characteristic length scale is very small. This means the Reynolds number is usually low, so flow through the puck is mostly laminar.</p>
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- §8 Temperature -->
+  <section class="section" id="sec-8">
+    <div class="section-number">08</div>
+    <h2>Temperature Dependence of Extraction</h2>
+    <p>Temperature affects both solubility and reaction/extraction rates. A simplified Arrhenius-type model can describe the temperature dependence:</p>
+    <div class="equation-block">
+      \[ k_T = A\,e^{-E_a/(RT)} \]
+    </div>
+    <div class="var-list">
+      <div class="var-item"><span class="sym">\(k_T\)</span> <span class="desc">— temperature-dependent extraction rate constant</span></div>
+      <div class="var-item"><span class="sym">\(A\)</span> <span class="desc">— pre-exponential factor</span></div>
+      <div class="var-item"><span class="sym">\(E_a\)</span> <span class="desc">— activation energy</span></div>
+      <div class="var-item"><span class="sym">\(R\)</span> <span class="desc">— gas constant</span></div>
+      <div class="var-item"><span class="sym">\(T\)</span> <span class="desc">— absolute temperature (K)</span></div>
+    </div>
+    <p>Higher temperature generally increases extraction rate, but excessive temperature can produce bitter or harsh flavors.</p>
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- §9 Diffusion -->
+  <section class="section" id="sec-9">
+    <div class="section-number">09</div>
+    <h2>Diffusion During Extraction</h2>
+    <p>Soluble compounds inside coffee particles must diffuse into the surrounding water. A simple one-dimensional diffusion model is given by Fick's second law:</p>
+    <div class="equation-block">
+      \[ \frac{\partial C}{\partial t} = D\,\frac{\partial^2 C}{\partial x^2} \]
+    </div>
+    <div class="var-list">
+      <div class="var-item"><span class="sym">\(C\)</span> <span class="desc">— concentration</span></div>
+      <div class="var-item"><span class="sym">\(D\)</span> <span class="desc">— diffusion coefficient</span></div>
+      <div class="var-item"><span class="sym">\(x\)</span> <span class="desc">— position</span></div>
+      <div class="var-item"><span class="sym">\(t\)</span> <span class="desc">— time</span></div>
+    </div>
+    <p>This equation describes how dissolved coffee compounds spread from regions of high concentration to low concentration.</p>
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- §10 Heat Transfer -->
+  <section class="section" id="sec-10">
+    <div class="section-number">10</div>
+    <h2>Heat Transfer in the Coffee Puck</h2>
+    <p>As hot water enters the coffee bed, heat transfers into the grounds and portafilter. A simplified heat equation is:</p>
+    <div class="equation-block">
+      \[ \frac{\partial T}{\partial t} = \alpha\,\frac{\partial^2 T}{\partial x^2}, \qquad \alpha = \frac{k_{\text{thermal}}}{\rho\,c_p} \]
+    </div>
+    <div class="var-list">
+      <div class="var-item"><span class="sym">\(\alpha\)</span> <span class="desc">— thermal diffusivity</span></div>
+      <div class="var-item"><span class="sym">\(k_{\text{thermal}}\)</span> <span class="desc">— thermal conductivity</span></div>
+      <div class="var-item"><span class="sym">\(\rho\)</span> <span class="desc">— density</span></div>
+      <div class="var-item"><span class="sym">\(c_p\)</span> <span class="desc">— specific heat capacity</span></div>
+    </div>
+    <p>Temperature stability matters because extraction rate and flavor balance depend strongly on water temperature.</p>
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- §11 Crema -->
+  <section class="section" id="sec-11">
+    <div class="section-number">11</div>
+    <h2>Crema &amp; Gas Formation</h2>
+    <p>Crema is a foam made from carbon dioxide gas, oils, water, and coffee solids. Freshly roasted coffee contains trapped CO\(_2\), which is released during extraction.</p>
+    <p>The ideal gas law gives a simple model for gas behavior:</p>
+    <div class="equation-block">
+      \[ PV = nRT \]
+    </div>
+    <div class="var-list">
+      <div class="var-item"><span class="sym">\(P\)</span> <span class="desc">— pressure</span></div>
+      <div class="var-item"><span class="sym">\(V\)</span> <span class="desc">— gas volume</span></div>
+      <div class="var-item"><span class="sym">\(n\)</span> <span class="desc">— number of moles</span></div>
+      <div class="var-item"><span class="sym">\(R\)</span> <span class="desc">— gas constant</span></div>
+      <div class="var-item"><span class="sym">\(T\)</span> <span class="desc">— temperature</span></div>
+    </div>
+    <p>When high-pressure espresso exits the portafilter and returns to atmospheric pressure, dissolved gases expand and contribute to crema formation.</p>
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- §12 Channeling -->
+  <section class="section" id="sec-12">
+    <div class="section-number">12</div>
+    <h2>Channeling &amp; Uneven Extraction</h2>
+    <p>Channeling occurs when water finds paths of lower resistance through the puck. In Darcy's law, this corresponds to local increases in permeability \( k \). If one region has higher permeability, then local flow increases:</p>
+    <div class="equation-block">
+      \[ Q_{\text{local}} \propto k_{\text{local}} \]
+    </div>
+    <p>This causes some regions of the puck to over-extract while others under-extract.</p>
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- §13 Conclusion -->
+  <section class="section" id="sec-13">
+    <div class="section-number">13</div>
+    <h2>Conclusion</h2>
+    <p>Espresso extraction is governed by a combination of fluid mechanics, heat transfer, diffusion, porous media physics, and chemistry. The most important variables include grind size, puck preparation, water temperature, pressure, flow rate, and extraction time.</p>
+    <p>A good espresso shot is not just a recipe — it is a controlled physics experiment.</p>
+  </section>
+
+</main>
+
+<footer>
+  <p style="margin-top:0.5rem; font-size:0.65rem; color:var(--roast);">Built with coffee and curiosity</p>
+</footer>
+
+<script>
+  // Intersection Observer for fade-in animations
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('.section, .abstract').forEach(el => observer.observe(el));
+
+  // Active TOC link on scroll
+  const sections = document.querySelectorAll('.section, .abstract');
+  const tocLinks = document.querySelectorAll('.toc-bar a');
+
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(sec => {
+      const top = sec.offsetTop - 100;
+      if (scrollY >= top) current = sec.id;
+    });
+    tocLinks.forEach(link => {
+      link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+    });
+  });
+</script>
+
+</body>
+</html>
